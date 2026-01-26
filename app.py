@@ -2,51 +2,48 @@ import streamlit as st
 import pandas as pd
 import io
 
-# Page configuration
 st.set_page_config(page_title="Bộ lọc Dữ liệu Chi nhánh", layout="wide")
 
-st.title("📂 Công cụ Lọc Dữ liệu MỤC 51")
-st.markdown("Tải lên tệp Excel và lọc dữ liệu theo **Mã SOL** hoặc **Tên chi nhánh**.")
+st.title("📂 Công cụ Lọc Dữ liệu Đa Cột")
 
-# 1. File Uploader
-uploaded_file = st.file_uploader("Chọn tệp Excel (KTNB_MUC51.xlsx)", type=["xlsx"])
+uploaded_file = st.file_uploader("Chọn tệp Excel", type=["xlsx"])
 
 if uploaded_file:
-    # Load data
-    @st.cache_data
-    def load_data(file):
-        return pd.read_excel(file, dtype=str)
+    df_tt = pd.read_excel(uploaded_file, dtype=str)
     
-    df_tt = load_data(uploaded_file)
-    st.success(f"Đã tải thành công {len(df_tt)} dòng dữ liệu.")
-
-    # 2. Filter Input
-    chi_nhanh = st.text_input("Nhập tên chi nhánh hoặc mã SOL cần lọc:", placeholder="Ví dụ: HANOI hoặc 001").strip().upper()
-
-    if chi_nhanh:
-        # Filtering logic
-        df_ftp_filtered = df_tt[df_tt['BRANCH_LAP_DAT_MAY'].astype(str).str.upper().str.contains(chi_nhanh, na=False)]
+    # --- LOGIC TÌM CỘT CHI NHÁNH ---
+    # Danh sách các tên cột tiềm năng (viết thường để so sánh)
+    potential_columns = ['branch_lap_dat_may', 'branch_code', 'brcd', 'ma_cn', 'chinhanh']
+    
+    # Tìm cột thực tế có trong file khớp với danh sách trên
+    found_col = None
+    for col in df_tt.columns:
+        if col.lower() in potential_columns:
+            found_col = col
+            break
+    
+    if found_col:
+        st.success(f"🔍 Đã nhận diện được cột dữ liệu: **{found_col}**")
         
-        # 3. Results Display
-        st.subheader(f"📌 Kết quả lọc cho: '{chi_nhanh}'")
-        st.write(f"Tìm thấy **{len(df_ftp_filtered)}** dòng.")
-        
-        if not df_ftp_filtered.empty:
-            st.dataframe(df_ftp_filtered, use_container_width=True)
+        chi_nhanh = st.text_input("Nhập tên chi nhánh hoặc mã SOL:").strip().upper()
 
-            # 4. Download Button
-            # We use an in-memory buffer to allow downloading without saving to the local disk
+        if chi_nhanh:
+            # Lọc dữ liệu trên cột vừa tìm thấy
+            df_ftp_filtered = df_tt[df_tt[found_col].astype(str).str.upper().str.contains(chi_nhanh, na=False)]
+            
+            st.subheader(f"📌 Kết quả lọc cho: '{chi_nhanh}'")
+            st.dataframe(df_ftp_filtered)
+
+            # Xuất file
             buffer = io.BytesIO()
             with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-                df_ftp_filtered.to_excel(writer, index=False, sheet_name='Filtered_Data')
+                df_ftp_filtered.to_excel(writer, index=False)
             
             st.download_button(
-                label="📥 Tải về tệp Excel đã lọc",
+                label="📥 Tải về kết quả",
                 data=buffer.getvalue(),
-                file_name=f"MUC51_Filtered_{chi_nhanh}.xlsx",
+                file_name=f"Filtered_{chi_nhanh}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
-        else:
-            st.warning("Không tìm thấy dữ liệu phù hợp với từ khóa trên.")
-else:
-    st.info("Vui lòng tải tệp Excel lên để bắt đầu.")
+    else:
+        st.error("❌ Không tìm thấy cột nào liên quan đến Chi nhánh (BRCD, BRANCH_CODE...). Vui lòng kiểm tra lại file.")
