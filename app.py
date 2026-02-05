@@ -13,7 +13,7 @@ if uploaded_file:
     
     # --- LOGIC TÌM CỘT CHI NHÁNH ---
     # Danh sách các tên cột tiềm năng (viết thường để so sánh)
-    potential_columns = ['branch_lap_dat_may', 'branch_code', 'brcd', 'ma_cn', 'chinhanh', 'SOL_ID_FROM', 'sol_id_from']
+    potential_columns = ['branch_lap_dat_may', 'branch_code', 'brcd', 'ma_cn', 'chinhanh', 'SOL_ID_FROM', 'sol_id_from', 'SOL_ID']
     
     # Tìm cột thực tế có trong file khớp với danh sách trên
     found_col = None
