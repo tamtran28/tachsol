@@ -7,6 +7,7 @@ st.set_page_config(page_title="Bộ lọc Dữ liệu Chi nhánh", layout="wide"
 st.title("📂 Công cụ Lọc Dữ liệu Đa Cột")
 
 uploaded_file = st.file_uploader("Chọn tệp Excel", type=["xlsx"])
+original_name = os.path.splitext(uploaded_file.name)[0]
 
 if uploaded_file:
     df_tt = pd.read_excel(uploaded_file, dtype=str)
@@ -42,7 +43,7 @@ if uploaded_file:
             st.download_button(
                 label="📥 Tải về kết quả",
                 data=buffer.getvalue(),
-                file_name=f"Filtered_{chi_nhanh}.xlsx",
+                file_name=f"{original_name}_{chi_nhanh}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
     else:
